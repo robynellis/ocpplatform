@@ -9,7 +9,8 @@ export MASTERAROSUBNET_PREFIX="10.0.1.0/24"
 export WORKERAROSUBNET_NAME="aroworker_subnet"
 export WORKERAROSUBNET_PREFIX="10.0.2.0/24"
 export apiServer=$(az aro show -g $RESOURCEGROUP -n $CLUSTER --query apiserverProfile.url -o tsv)
-export RH_PULLSECRET=
+export RH_PULLSECRET=$(cat ~/Downloads/pull-secret.txt)
+#modify path as appropriate
 
 #Create RG
 az group create --location $LOCATION --resource-group $RESOURCEGROUP
