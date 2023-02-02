@@ -1,0 +1,56 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  creationTimestamp: null
+  labels:
+    machine.openshift.io/cluster-api-cluster: dev-j2gdt
+  name: dev-j2gdt-storage
+  namespace: openshift-machine-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: dev-j2gdt
+      machine.openshift.io/cluster-api-machineset: dev-j2gdt-storage
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        machine.openshift.io/cluster-api-cluster: dev-j2gdt
+        machine.openshift.io/cluster-api-machine-role: storage
+        machine.openshift.io/cluster-api-machine-type: storage
+        machine.openshift.io/cluster-api-machineset: dev-j2gdt-storage
+    spec:
+      metadata:
+        creationTimestamp: null
+        labels:
+          node-role.kubernetes.io/storage: ""
+      taints:
+      - key: node-role.kubernetes.io/storage
+        effect: NoSchedule
+      providerSpec:
+        value:
+          apiVersion: vsphereprovider.openshift.io/v1beta1
+          credentialsSecret:
+            name: vsphere-cloud-credentials
+          diskGiB: 120
+          kind: VSphereMachineProviderSpec
+          memoryMiB: 16384
+          metadata:
+            creationTimestamp: null
+          network:
+            devices:
+            - networkName: baremetal
+          numCPUs: 8
+          numCoresPerSocket: 2
+          template: dev-j2gdt-rhcos
+          userDataSecret:
+            name: worker-user-data
+          workspace:
+            datacenter: HomeLab
+            datastore: SSD
+            folder: /HomeLab/vm/OCPdev
+            resourcePool: /HomeLab/host/HomeLab/Resources
+            server: vcenterhostname.domain.suffix
+status:
+  replicas: 0

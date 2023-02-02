@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-nmstate
+
+---
+
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: "kubernetes-nmstate-operator"
+  namespace: openshift-nmstate
+spec:
+  channel: "stable" 
+  installPlanApproval: "Automatic"
+  source: "redhat-operators" 
+  sourceNamespace: "openshift-marketplace"
+  name: "kubernetes-nmstate-operator"
+
+---
+
+apiVersion: nmstate.io/v1beta1
+kind: NMState
+metadata:
+  name: nmstate
+spec:
+  nodeSelector:
+    beta.kubernetes.io/arch: amd64
+
+---
+
+apiVersion: nmstate.io/v1beta1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: optnic-policy 
+spec:
+  nodeSelector: 
+    kubernetes.io/hostname: ocpedge.edge.aliveagain.me 
+  desiredState:
+    interfaces:
+    - name: ens224 
+      description: Configuring ens224 on node01 
+      type: ethernet 
+      state: up 
+      ipv4:
+        dhcp: false
+        enabled: true
+        address:
+        - ip: 192.168.2.240
+          prefix-length: 24
+        enabled: true
+      mtu: 9000
+    - name: ens256
+      description: configuring ens256 on node01
+      type: ethernet
+      state: up
+      ipv4:
+        dhcp: false
+        enabled: true
+        address:
+        - ip: 192.168.3.240
+          prefix-length: 24
+        enabled: true
+      mtu: 9000

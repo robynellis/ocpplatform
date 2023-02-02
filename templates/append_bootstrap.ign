@@ -3,7 +3,7 @@
     "config": {
       "append": [
         {
-          "source": "http://singer.ocp4.aliveagain.me:8080/ignition/bootstrap.ign", 
+          "source": "http://yourHTTPDserver:8080/ignition/bootstrap.ign", 
           "verification": {}
         }
       ]

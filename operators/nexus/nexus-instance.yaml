@@ -1,0 +1,77 @@
+apiVersion: sonatype.com/v1alpha1
+kind: NexusRepo
+metadata:
+  name: nexus
+  namespace: nexus
+spec:
+  config:
+    enabled: false
+    mountPath: /sonatype-nexus-conf
+  deployment:
+    annotations: {}
+    terminationGracePeriodSeconds: 120
+  deploymentStrategy: {}
+  ingress:
+    annotations: {}
+    enabled: false
+    path: /
+    tls:
+      enabled: true
+      secretName: nexus-tls
+  nexus:
+    dockerPort: 5003
+    env:
+      - name: install4jAddVmParams
+        value: >-
+          -Xms3 -Xmx6 -XX:MaxDirectMemorySize=4G
+          -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+      - name: NEXUS_SECURITY_RANDOMPASSWORD
+        value: 'false'
+    hostAliases: []
+    imageName: >-
+      registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:9dafcabb682b0f361a7368dcce6d1589a7229c1558fc884fbd2f45113b7db18e
+    imagePullPolicy: IfNotPresent
+    imagePullSecret: ''
+    livenessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      path: /
+      periodSeconds: 30
+    nexusPort: 8081
+    podAnnotations: {}
+    readinessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      path: /
+      periodSeconds: 30
+    resources: {}
+    securityContext: {}
+    service:
+      type: NodePort
+  nexusProxyRoute:
+    enabled: false
+  persistence:
+    accessMode: ReadWriteMany
+    enabled: true
+    storageSize: 1024Gi
+    storageClass: freenas-nfs-csi
+  replicaCount: 1
+  route:
+    enabled: false
+    name: docker
+    portName: docker
+  secret:
+    enabled: false
+    mountPath: /etc/secret-volume
+    readOnly: true
+  service:
+    annotations: {}
+    enabled: false
+    labels: {}
+    ports:
+      - name: nexus-service
+        port: 80
+        targetPort: 80
+  statefulset:
+    enabled: false
+  tolerations: []
