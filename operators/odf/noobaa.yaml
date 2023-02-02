@@ -1,0 +1,35 @@
+apiVersion: noobaa.io/v1alpha1
+kind: NooBaa
+metadata:
+  name: noobaa
+  namespace: openshift-storage
+spec:
+ dbResources:
+   requests:
+     cpu: '0.1'
+     memory: 1Gi
+ dbType: postgres
+ coreResources:
+   requests:
+     cpu: '0.1'
+     memory: 1Gi
+
+---
+
+apiVersion: noobaa.io/v1alpha1
+kind: BackingStore
+metadata:
+  finalizers:
+  - noobaa.io/finalizer
+  labels:
+    app: noobaa
+  name: noobaa-pv-backing-store
+  namespace: openshift-storage
+spec:
+  pvPool:
+    numVolumes: 1
+    resources:
+      requests:
+        storage: 200Gi 
+    storageClass: freenas-iscsi-csi
+  type: pv-pool
