@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ocp-etcd-backup
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: etcd-bkp-pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+      storage: 100Gi
+  nfs:
+    path: <your_nfs_export>
+    server: <your_NFS_server>
+  persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    name: etcd-bkp-pvc
+    namespace: ocp-etcd-backup
+
+---
+
+apiVersion: v1
+kind: "PersistentVolumeClaim"
+metadata:
+  name: etcd-bkp-pvc
+  namespace: ocp-etcd-backup
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: etcd-bkp-pv
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: openshift-backup
+  namespace: ocp-etcd-backup
+  labels:
+    app: openshift-backup
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: openshift-backup
+  labels:
+    app: openshift-backup
+subjects:
+  - kind: ServiceAccount
+    name: openshift-backup
+    namespace: ocp-etcd-backup
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+
+---
+
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: openshift-backup
+  namespace: ocp-etcd-backup
+  labels:
+    app: openshift-backup
+spec:
+  schedule: "5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    metadata:
+      labels:
+        app: openshift-backup
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: openshift-backup
+        spec:
+          dnsPolicy: ClusterFirst
+          hostNetwork: true
+          containers:
+            - name: backup
+              image: "registry.redhat.io/openshift4/ose-cli:latest"
+              command:
+                - "/bin/bash"
+                - "-c"
+                - oc get no -l node-role.kubernetes.io/master --no-headers -o name | head -n 1 |xargs -I {} -- oc debug {} -- bash -c 'chroot /host /usr/local/bin/cluster-backup.sh /mnt && find /host/mnt -type f -mmin +"1" -delete'
+              volumeMounts:
+              - mountPath: /host/mnt
+                name: etcd-bkp-pvc
+          volumes:
+            - name: etcd-bkp-pvc
+              persistentVolumeClaim:
+                claimName: etcd-bkp-pvc
+          restartPolicy: "Never"
+          terminationGracePeriodSeconds: 30
+          activeDeadlineSeconds: 500
+          dnsPolicy: "ClusterFirst"
+          serviceAccountName: "openshift-backup"
+          serviceAccount: "openshift-backup"
+
