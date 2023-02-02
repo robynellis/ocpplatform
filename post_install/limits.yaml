@@ -1,0 +1,23 @@
+kind: LimitRange
+apiVersion: v1
+metadata:
+  name: project-limits
+spec:
+  limits:
+  - type: Pod
+    max:
+      cpu: 1
+      memory: 1Gi
+    min:
+      cpu: 10m
+      memory: 5Mi
+  - type: Container
+    max:
+      cpu: 1
+      memory: 1Gi
+    min:
+      cpu: 10m
+      memory: 5Mi
+    default:
+      cpu: 500m
+      memory: 500Mi
